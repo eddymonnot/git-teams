@@ -69,16 +69,17 @@ case "$cmd" in
       echo "== $r"
       cd "$ROOT/$r"
       git fetch -q "$tmp/$r.bundle" "$branch"
+      new=$(git rev-parse FETCH_HEAD)   # FETCH_HEAD est propre à chaque worktree : on fige le commit ici
       wt=$(worktree_of)
       if [ -z "$wt" ]; then
         wt="$ROOT/$r-$key"
         if git rev-parse -q --verify "refs/heads/$branch" >/dev/null; then
           git worktree add -q "$wt" "$branch"
         else
-          git worktree add -q "$wt" -b "$branch" FETCH_HEAD; continue
+          git worktree add -q "$wt" -b "$branch" "$new"; continue
         fi
       fi
-      git -C "$wt" merge -q --ff-only FETCH_HEAD \
+      git -C "$wt" merge -q --ff-only "$new" \
         || { echo "❌ $r : modifs non commitées ou branche divergente"; exit 1; }
     done
     echo "✅ $branch à jour" ;;
